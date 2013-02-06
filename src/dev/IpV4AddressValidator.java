@@ -6,7 +6,40 @@ public class IpV4AddressValidator implements IpAddressValidator {
 
 	@Override
 	public boolean isValid(String addressToCheck) {
-		String[] parts = splitInParts(addressToCheck);
+		return (addressToCheck != null)
+				&& (isIntegerRepresentation(addressToCheck) || isDottedDecimalRepresentation(addressToCheck));
+	}
+
+	@Override
+	public boolean isLocalhost(String addressToCheck) {
+		if (isValid(addressToCheck)) {
+			long addressValue = toLong(addressToCheck);
+			long minLocalhost = toLong("127.0.0.1");
+			long maxLocalhost = toLong("127.255.255.254");
+			return ((addressValue >= minLocalhost) && (addressValue <= maxLocalhost));
+		}
+		return false;
+	}
+
+	private boolean isIntegerRepresentation(String str) {
+		try {
+			long value = Long.parseLong(str, 10);
+			return value >= 0 && value < exp(256, 4);
+		} catch (NumberFormatException nfe) {
+			return false;
+		}
+	}
+
+	private long exp(int value, int exponent) {
+		long result = 1L;
+		for (int i = 0; i < exponent; ++i) {
+			result *= value;
+		}
+		return result;
+	}
+
+	private boolean isDottedDecimalRepresentation(String str) {
+		String[] parts = splitInParts(str);
 		if (parts.length != 4) {
 			return false;
 		}
@@ -23,22 +56,11 @@ public class IpV4AddressValidator implements IpAddressValidator {
 		return true;
 	}
 
-	@Override
-	public boolean isLocalhost(String addressToCheck) {
-		if (isValid(addressToCheck)) {
-			long addressValue = toLong(addressToCheck);
-			long minLocalhost = 256L * 256 * 256 * 127 + 1;
-			long maxLocalhost = 256L * 256 * 256 * 128 - 2;
-			return ((addressValue >= minLocalhost) && (addressValue <= maxLocalhost));
-		}
-		return false;
-	}
-
 	private long toLong(String addressToCheck) {
 		String[] parts = splitInParts(addressToCheck);
-		return 256L * 256 * 256 * Integer.parseInt(parts[0]) //
-				+ 256L * 256L * Integer.parseInt(parts[1]) //
-				+ 256L * Integer.parseInt(parts[2]) //
+		return Integer.parseInt(parts[0]) * exp(256, 3) //
+				+ Integer.parseInt(parts[1]) * exp(256, 2) //
+				+ Integer.parseInt(parts[2]) * exp(256, 1) //
 				+ Integer.parseInt(parts[3]);
 	}
 
