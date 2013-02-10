@@ -28,7 +28,7 @@ public class IpV6ValidatorTest {
 		assertTrue("Last valid address",
 				validator.isValid("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"));
 	}
-	
+
 	@Test
 	public void testInvalidLongIpV6Addresses() {
 		assertFalse("Negative numbers invalid",
@@ -37,5 +37,36 @@ public class IpV6ValidatorTest {
 				validator.isValid("0000:0000:0000:0000:0000:0000:0000:GCBA"));
 		assertFalse("Too few blocks", validator.isValid("0000:0000"));
 		assertFalse("Too many blocks", validator.isValid("0:1:2:3:4:5:6:7:8"));
+		assertFalse("Single block larger than FFFF",
+				validator.isValid("0000:0000:0000:0000:0000:0000:0000:1FFFF"));
+	}
+
+	@Test
+	public void testValidShortIpV6Addresses() {
+		assertTrue("Skip leading zeros", validator.isValid("1:2:3:4:5:6:7:8"));
+		assertTrue(":: for missing block", validator.isValid("1:2:3::4:5:6:7"));
+		assertTrue(":: is also valid", validator.isValid("::"));
+		assertTrue(":: on the end", validator.isValid("::1:2"));
+		assertTrue(":: on the start", validator.isValid("1:2:3::"));
+		assertTrue(":: with five blocks", validator.isValid("1:2::3:4:5"));
+		assertTrue(":: with six blocks", validator.isValid("1:2:3:4:5::6"));
+	}
+
+	@Test
+	public void testInvalidShortIpV6Addresses() {
+		assertFalse(":: only allowed once", validator.isValid("::1::"));
+		assertFalse("too much blocks", validator.isValid("1:2:3:4::5:6:7:8"));
+	}
+
+	@Test
+	public void testLocalHost() {
+		assertTrue("ShortVersion", validator.isLocalhost("::1"));
+		assertTrue("LongVersion", validator.isLocalhost("0:0:0:0:0:0:0:1"));
+		assertTrue("FullVersion", validator //
+				.isLocalhost("0000:0000:0000:0000:0000:0000:0000:0001"));
+		assertFalse("Smaller than localhost", validator.isLocalhost("::"));
+		assertFalse("Larger than localhost", validator.isLocalhost("::2"));
+		assertFalse("typical address", validator.isLocalhost("2001:db8:32::231:31"));
+		assertFalse("Invalid address never localhost", validator.isLocalhost(""));
 	}
 }
