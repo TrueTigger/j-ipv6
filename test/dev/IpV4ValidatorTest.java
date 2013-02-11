@@ -1,7 +1,10 @@
 package dev;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,7 +22,7 @@ public class IpV4ValidatorTest {
 		assertFalse("Null is invalid", validator.isValid(null));
 		assertFalse("Empty string is invalid", validator.isValid(""));
 	}
-	
+
 	@Test
 	public void testValidDottedDecimalNotation() {
 		assertTrue("First valid address", validator.isValid("0.0.0.0"));
@@ -37,13 +40,14 @@ public class IpV4ValidatorTest {
 		assertFalse("Byte too large", validator.isValid("1.256.3.4"));
 		assertFalse("Not decimal number", validator.isValid("0x10.22.33.44"));
 	}
-	
+
 	@Test
 	public void testValidIntegerNotation() {
 		assertTrue("First valid address", validator.isValid("0"));
 		assertTrue("Last valid address", validator.isValid("4294967295"));
+		assertTrue("192.168.0.1 as integer", validator.isValid("3232235521"));
 	}
-	
+
 	@Test
 	public void testInvalidIntegerNotation() {
 		assertFalse("Too small: <0", validator.isValid("-1"));
@@ -59,5 +63,14 @@ public class IpV4ValidatorTest {
 		assertFalse("Broadcast", validator.isLocalhost("127.255.255.255"));
 		assertFalse("Wrong range", validator.isLocalhost("128.0.0.1"));
 		assertFalse("Invalid address", validator.isLocalhost(null));
+	}
+
+	@Test
+	public void testToNumber() {
+		assertNull("Invalid ip returns null", validator.toNumber(null));
+		assertEquals("Dotted decimal notation correct converted", 3232235521L, //
+				validator.toNumber("192.168.0.1").longValue());
+		assertEquals("Integer notation correct converted", 3232235521L, //
+				validator.toNumber("3232235521").longValue());
 	}
 }

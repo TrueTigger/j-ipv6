@@ -1,5 +1,7 @@
 package dev;
 
+import java.math.BigInteger;
+
 public class IpV4AddressValidator implements IpAddressValidator {
 
 	private static final String SPLIT_PARTS_PATTERN = "\\.";
@@ -13,14 +15,30 @@ public class IpV4AddressValidator implements IpAddressValidator {
 	@Override
 	public boolean isLocalhost(String addressToCheck) {
 		if (isValid(addressToCheck)) {
-			long addressValue = toLong(addressToCheck);
-			long minLocalhost = toLong("127.0.0.1");
-			long maxLocalhost = toLong("127.255.255.254");
+			long addressValue = toNumber(addressToCheck).longValue();
+			long minLocalhost = toNumber("127.0.0.1").longValue();
+			long maxLocalhost = toNumber("127.255.255.254").longValue();
 			return ((addressValue >= minLocalhost) && (addressValue <= maxLocalhost));
 		}
 		return false;
 	}
 
+	@Override
+	public BigInteger toNumber(String address) {
+		if (isValid(address)) {
+			if (isIntegerRepresentation(address)) {
+				return new BigInteger(address);
+			}
+			String[] parts = splitInParts(address);
+			return new BigInteger(Long.toString( //
+					Integer.parseInt(parts[0]) * exp(256, 3) //
+					+ Integer.parseInt(parts[1]) * exp(256, 2) //
+					+ Integer.parseInt(parts[2]) * exp(256, 1) //
+					+ Integer.parseInt(parts[3])));
+		}
+		return null;
+	}
+	
 	private boolean isIntegerRepresentation(String str) {
 		try {
 			long value = Long.parseLong(str, 10);
@@ -30,13 +48,6 @@ public class IpV4AddressValidator implements IpAddressValidator {
 		}
 	}
 
-	private long exp(int value, int exponent) {
-		long result = 1L;
-		for (int i = 0; i < exponent; ++i) {
-			result *= value;
-		}
-		return result;
-	}
 
 	private boolean isDottedDecimalRepresentation(String str) {
 		String[] parts = splitInParts(str);
@@ -56,15 +67,15 @@ public class IpV4AddressValidator implements IpAddressValidator {
 		return true;
 	}
 
-	private long toLong(String addressToCheck) {
-		String[] parts = splitInParts(addressToCheck);
-		return Integer.parseInt(parts[0]) * exp(256, 3) //
-				+ Integer.parseInt(parts[1]) * exp(256, 2) //
-				+ Integer.parseInt(parts[2]) * exp(256, 1) //
-				+ Integer.parseInt(parts[3]);
-	}
-
 	private String[] splitInParts(String addressToCheck) {
 		return addressToCheck.split(SPLIT_PARTS_PATTERN);
+	}
+	
+	private long exp(int value, int exponent) {
+		long result = 1L;
+		for (int i = 0; i < exponent; ++i) {
+			result *= value;
+		}
+		return result;
 	}
 }

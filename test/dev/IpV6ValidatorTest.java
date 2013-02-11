@@ -1,7 +1,11 @@
 package dev;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.math.BigInteger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +16,7 @@ public class IpV6ValidatorTest {
 
 	@Before
 	public void setUp() {
-		validator = new IpV6Validator();
+		validator = new IpV6AddressValidator();
 	}
 
 	@Test
@@ -66,7 +70,21 @@ public class IpV6ValidatorTest {
 				.isLocalhost("0000:0000:0000:0000:0000:0000:0000:0001"));
 		assertFalse("Smaller than localhost", validator.isLocalhost("::"));
 		assertFalse("Larger than localhost", validator.isLocalhost("::2"));
-		assertFalse("typical address", validator.isLocalhost("2001:db8:32::231:31"));
-		assertFalse("Invalid address never localhost", validator.isLocalhost(""));
+		assertFalse("typical address",
+				validator.isLocalhost("2001:db8:32::231:31"));
+		assertFalse("Invalid address never localhost",
+				validator.isLocalhost(""));
+	}
+
+	@Test
+	public void testToNumber() {
+		assertNull("Invalid inpiut = null", validator.toNumber("192.168.1.1"));
+		assertEquals("localhost = 1", BigInteger.ONE, validator.toNumber("::1"));
+		assertEquals("Short IPv6 address converted correctly",
+				new BigInteger("AFFE0000CAFEBABE0000000000000042", 16),
+				validator.toNumber("AFFE:0:CAFE:BABE::42"));
+		assertEquals("Max IPv6 address converted correctly",
+				new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16),
+				validator.toNumber("FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF"));
 	}
 }

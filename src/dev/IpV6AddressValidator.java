@@ -2,7 +2,7 @@ package dev;
 
 import java.math.BigInteger;
 
-public class IpV6Validator implements IpAddressValidator {
+public class IpV6AddressValidator implements IpAddressValidator {
 
 	private static final String BLOCK_SEPARATOR = ":";
 
@@ -17,6 +17,23 @@ public class IpV6Validator implements IpAddressValidator {
 				&& toNumber(addressToCheck).equals(toNumber("::1"));
 	}
 
+	@Override
+	public BigInteger toNumber(String address) {
+		if (isValid(address)) {
+			BigInteger number = new BigInteger("0");
+			BigInteger multiplicator = new BigInteger("1");
+			BigInteger fullBlockValue = new BigInteger("10000", 16);
+			String blocks[] = replaceEmptyBlocks(address).split(BLOCK_SEPARATOR);
+			for (int i = 7; i >= 0; --i) {
+				BigInteger value = new BigInteger(blocks[i], 16);
+				number = number.add(value.multiply(multiplicator));
+				multiplicator = multiplicator.multiply(fullBlockValue);
+			}
+			return number;
+		}
+		return null;
+	}
+
 	public String normalize(String input) {
 		String output = input;
 		if (output != null) {
@@ -26,23 +43,7 @@ public class IpV6Validator implements IpAddressValidator {
 		}
 		return output;
 	}
-
-	private BigInteger toNumber(String address) {
-		if (isValid(address)) {
-			BigInteger number = new BigInteger("0");
-			BigInteger multiplicator = new BigInteger("1");
-			BigInteger ffff = new BigInteger("ffff", 16);
-			String blocks[] = replaceEmptyBlocks(address).split(BLOCK_SEPARATOR);
-			for (int i = 7; i >= 0; --i) {
-				BigInteger value = new BigInteger(blocks[i], 16);
-				number = number.add(value.multiply(multiplicator));
-				multiplicator = multiplicator.multiply(ffff);
-			}
-			return number;
-		}
-		return null;
-	}
-
+	
 	private boolean validHexadecimalNotation(String input) {
 		String address = replaceEmptyBlocks(input);
 		String blocks[] = address.split(BLOCK_SEPARATOR);
